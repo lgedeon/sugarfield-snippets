@@ -81,9 +81,7 @@ class Sugarfield_Snippets {
 			)
 		);
 
-		add_shortcode( 'snippet-data',       array( $this, 'shortcode_snippet_data' ) );
-		add_shortcode( 'snippet-post',       array( $this, 'shortcode_snippet_post' ) );
-		add_shortcode( 'snippet-site',       array( $this, 'shortcode_snippet_site' ) );
+		add_shortcode( 'sugarfield-get',     array( $this, 'shortcode_sugarfield_get' ) );
 		add_shortcode( 'sugarfield-snippet', array( $this, 'shortcode_sugarfield_snippet' ) );
 	}
 
@@ -114,7 +112,7 @@ class Sugarfield_Snippets {
 		}
 	}
 
-	function get_snippet_data( $field = '', $parent = 0, $return_all = false ) {
+	function get_snippet_data( $field = '', $return_all = false ) {
 		$data = $this->_data_sets[ max( 0, count( $this->_data_sets ) - intval( $parent ) - 1 ) ];
 
 		if ( $return_all || is_string( $data ) || is_numeric( $data ) ) {
@@ -159,31 +157,23 @@ class Sugarfield_Snippets {
 		return $this->do_snippet( $snippet, $data );
 	}
 
-	function shortcode_snippet_data( $atts ) {
-		$atts = shortcode_atts( array( 'field' => '', 'parent' => '0' ), $atts );
+	function shortcode_sugarfield_get( $atts ) {
+		$atts = shortcode_atts( array( 'field' => '', 'post' => '', 'site' => '', 'function' => '' ), $atts );
 
-		return $this->get_snippet_data( $atts['field'], $atts['parent'] );
-	}
-
-	function shortcode_snippet_post( $atts ) {
-		$atts = shortcode_atts( array( 'field' => '' ), $atts );
-
-		$post = get_post();
-
-		if ( in_array( $atts['field'], array( 'get_the_content' ) ) ) { //todo allow a few more functions - must return its value, no echo
-			return call_user_func( $atts['field'] );
-		} elseif ( isset( $post->{$atts['field']} ) ) {
-			return $post->{$atts['field']};
+		if ( ! empty( $atts['field'] ) ) {
+			return $this->get_snippet_data( $atts['field'] );
+		} elseif ( ! empty( $atts['post'] ) ) {
+			$post = get_post();
+			return $post->{$atts['post']};
+		} elseif ( ! empty( $atts['site'] ) ) {
+			return get_bloginfo( $atts['site'] );
+		} elseif ( ! empty( $atts['function'] ) && in_array( $atts['field'], array(
+				'get_the_content',
+				'get_the_date',
+				'get_the_author',
+				) ) ) { //todo allow a few more functions - must return a value, no echo, and (for now) not require parameters
+			return call_user_func( $atts['function'] );
 		}
-
-	}
-
-	function shortcode_snippet_site( $atts ) {
-		$atts = shortcode_atts( array( 'field' => '' ), $atts );
-
-//		if ( in_array( $atts['field'], array( 'get_the_content' ) ) ) {
-			return get_bloginfo( $atts['field'] );
-//		}
 
 	}
 
@@ -215,6 +205,7 @@ function ss_do_snippets( $args, $data_sets = array() ) {
  * get_content
  * intercept shortcodes of the form [sugarfield-get field="value"]
  * Fields:
+ *   field         = get a field that was passed when calling a snippet
  *   title         = get a snippet by title
  *   site-field    = get blog-title, tagline, header image, etc.
  *   blog-field    = alias for site-field
