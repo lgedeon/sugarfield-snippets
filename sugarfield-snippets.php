@@ -92,13 +92,6 @@ class Sugarfield_Snippets {
 		}
 	}
 
-	// Convenience wrapper for other shortcodes and widgets - not used by shortcodes in this class
-	function get_snippets( $args ) {
-		$args['post_type'] = 'sugarfield_snippets';
-		$query = new WP_Query( $args );
-		return $query->query( $args );
-	}
-
 	function do_snippet( $snippet, $data ) {
 		// store $data for use by shortcodes or other content filters
 		$this->_data_sets[] = $data;
@@ -157,22 +150,61 @@ class Sugarfield_Snippets {
 		return $this->do_snippet( $snippet, $data );
 	}
 
+	/*
+	 * get_content
+	 * intercept shortcodes of the form [sugarfield-get field="value"]
+	 * Fields:
+	 *   field       = get a field that was passed when calling a snippet
+	 *   post        = get title, excerpt, date, etc. for the current post
+	 *   site        = get blog-title, tagline, header image, etc.
+	 *   blog        = alias for site
+	 *   function    = return value of a function - must return a value, no echo, and (for now) not require parameters
+	 *   network     = network name, url, etc. // not part of phase 1
+	 *   widget-area = get a whole widget-area
+	 *   menu        = get a menu (or maybe a menu location)
+	 *
+	 * return filtered content
+	 */
 	function shortcode_sugarfield_get( $atts ) {
-		$atts = shortcode_atts( array( 'field' => '', 'post' => '', 'site' => '', 'function' => '' ), $atts );
+		$atts = shortcode_atts( array( 'field' => '', 'post' => '', 'site' => '', 'blog' => '', 'function' => '',
+		                               'widget-area' => '', 'widget' => '', 'menu' => '', 'parameter' => '' ), $atts );
+
+		if ( ! empty( $atts['blog'] ) ) {
+			$atts['site'] = $atts['blog'];
+		}
+
+		$parameter = sanitize_text_field( $atts['parameter'] );
 
 		if ( ! empty( $atts['field'] ) ) {
 			return $this->get_snippet_data( $atts['field'] );
+
 		} elseif ( ! empty( $atts['post'] ) ) {
 			$post = get_post();
 			return $post->{$atts['post']};
+
+		} elseif ( ! empty( $atts['widget-area'] ) ) {
+			return dynamic_sidebar( sanitize_key( $atts['widget-area'] ) );
+
+		} elseif ( ! empty( $atts['widget'] ) ) {
+			ob_start();
+			the_widget( sanitize_text_field( $atts['widget'] ), $parameter );
+			return ob_get_clean();
+
+		} elseif ( ! empty( $atts['menu'] ) ) {
+			$menu_args = ( json_decode( $atts['menu'], true ) ) ?: array( 'menu' => sanitize_text_field( $atts['menu'] ) );
+			ob_start();
+			wp_nav_menu( $menu_args );
+			return ob_get_clean();
+
 		} elseif ( ! empty( $atts['site'] ) ) {
 			return get_bloginfo( $atts['site'] );
-		} elseif ( ! empty( $atts['function'] ) && in_array( $atts['field'], array(
+
+		} elseif ( ! empty( $atts['function'] ) && in_array( $atts['function'], array(
 				'get_the_content',
-				'get_the_date',
+				'get_the_date',               // todo allow a few more functions
 				'get_the_author',
-				) ) ) { //todo allow a few more functions - must return a value, no echo, and (for now) not require parameters
-			return call_user_func( $atts['function'] );
+				) ) ) {
+			return call_user_func( $atts['function'], $parameter );
 		}
 
 	}
@@ -201,22 +233,14 @@ function ss_do_snippets( $args, $data_sets = array() ) {
 	return $content;
 }
 
-/*
- * get_content
- * intercept shortcodes of the form [sugarfield-get field="value"]
- * Fields:
- *   field         = get a field that was passed when calling a snippet
- *   title         = get a snippet by title
- *   site-field    = get blog-title, tagline, header image, etc.
- *   blog-field    = alias for site-field
- *   network-field = network name, url, etc.
- *   post-field    = get title, excerpt, date, etc.
- *   widget-area   = get a whole widget-area
- *   menu          = get a menu (or maybe a menu location)
- *
- * return filtered content
- */
 
-
+/* scrap heap ?
+// Convenience wrapper for other shortcodes and widgets - not used by shortcodes in this class
+function get_snippets( $args ) {
+	$args['post_type'] = 'sugarfield_snippets';
+	$query = new WP_Query( $args );
+	return $query->query( $args );
+}
+*/
 
 
