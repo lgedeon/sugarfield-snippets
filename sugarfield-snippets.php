@@ -40,6 +40,8 @@ class Sugarfield_Snippets {
 
 	private $_data_sets = array();
 
+	private $_allowed_functions = array();
+
 	static function get_instance() {
 		if ( ! isset( self::$_instance ) ) {
 			self::$_instance = new Sugarfield_Snippets();
@@ -85,6 +87,12 @@ class Sugarfield_Snippets {
 
 		add_shortcode( 'sugarfield-get',     array( $this, 'shortcode_sugarfield_get' ) );
 		add_shortcode( 'sugarfield-snippet', array( $this, 'shortcode_sugarfield_snippet' ) );
+
+		$this->_allowed_functions = apply_filters( 'sugarfield_allowed_functions', array(
+			'get_the_content',
+			'get_the_date',               // todo allow a few more functions
+			'get_the_author',
+		) );
 	}
 
 	function edit_form_after_title( ) {
@@ -199,13 +207,9 @@ class Sugarfield_Snippets {
 			return ob_get_clean();
 
 		} elseif ( ! empty( $atts['site'] ) ) {
-			return get_bloginfo( $atts['site'] );
+			return get_bloginfo( $atts['site'] ); // todo: test in network environment
 
-		} elseif ( ! empty( $atts['function'] ) && in_array( $atts['function'], array(
-				'get_the_content',
-				'get_the_date',               // todo allow a few more functions
-				'get_the_author',
-				) ) ) {
+		} elseif ( ! empty( $atts['function'] ) && in_array( $atts['function'], $this->_allowed_functions ) ) {
 			return call_user_func( $atts['function'], $parameter );
 		}
 
