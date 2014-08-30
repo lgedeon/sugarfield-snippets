@@ -13,18 +13,20 @@
  * Calls snippets from shortcodes, menus, widgets, PHP template tag, or action hooks.
  *
  * Works with:
- *   Tigerridge Theme - A rapid prototyping theme. Replaces template files a single index.html that only fires actions.
- *   OnyxEye Templates - Calls template files and parts all the Sugarfield ways - uses ob filter to split header.php into <head> and <body>
+ *   Tigerridge Theme - A rapid prototyping theme. Replaces template files with a single index.html that only fires actions.
+ *   OnyxEye Templates - Calls template files and parts in all the Sugarfield ways - uses ob filter to split header.php into <head> and <body>
  *
  */
 
 /**
  * todo: need shortcodes to:
- *   done - handle looping
- *   done - handle template tags like the_title, the_post, the_content, site_title, tagline, etc.
- *   include menus and widget-areas
+ *   done - include menus and widget-areas
  *   declare section widths based on responsive framework columns
  * todo: add option to create widget-areas
+ * todo: call snippets from menus
+ * todo: call snippets from widgets
+ * todo: call snippets from PHP template tags
+ * todo: call snippets from action hooks
  * todo: write a plugin dependency plugin - scoping here:
  *    should give a download url, description url, a description of what is added by using the two together
  *    should handle installing and checking for updates
