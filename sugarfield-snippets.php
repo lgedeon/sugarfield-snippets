@@ -15,6 +15,7 @@
  * Works with:
  *   Tigerridge Theme - A rapid prototyping theme. Replaces template files with a single index.html that only fires actions.
  *   OnyxEye Templates - Calls template files and parts in all the Sugarfield ways - uses ob filter to split header.php into <head> and <body>
+ *   Widget Instance by global_1981 - Get widget with data already in it from a sidebar - http://wordpress.org/plugins/widget-instance/
  *
  */
 
@@ -32,6 +33,8 @@
  *    should handle installing and checking for updates
  *    can monitor updates from wp.org and github
  *    relationship type: framework, feature, modifier, symbiant
+ * todo: write user-side documentation
+ * todo: create shortcode builder
  */
 
 class Sugarfield_Snippets {
@@ -115,7 +118,7 @@ class Sugarfield_Snippets {
 		}
 	}
 
-	function get_snippet_data( $field = '', $return_all = false ) {
+	function get_snippet_data( $field = '', $parent = 0, $return_all = false ) {
 		$data = $this->_data_sets[ max( 0, count( $this->_data_sets ) - intval( $parent ) - 1 ) ];
 
 		if ( $return_all || is_string( $data ) || is_numeric( $data ) ) {
@@ -177,13 +180,13 @@ class Sugarfield_Snippets {
 	 */
 	function shortcode_sugarfield_get( $atts ) {
 		$atts = shortcode_atts( array( 'field' => '', 'post' => '', 'site' => '', 'blog' => '', 'function' => '',
-		                               'widget-area' => '', 'widget' => '', 'menu' => '', 'parameter' => '' ), $atts );
+		                               'sidebar' => '', 'widgetarea' => '', 'widget' => '', 'menu' => '',
+		                               'parameter' => '' ), $atts );
 
-		if ( ! empty( $atts['blog'] ) ) {
-			$atts['site'] = $atts['blog'];
-		}
+		$atts['site'] = max( $atts['blog'], $atts['site'] );
+		$atts['sidebar'] = max( $atts['sidebar'], $atts['widgetarea'] );
 
-		$parameter = sanitize_text_field( $atts['parameter'] );
+		$parameter = ( json_decode( $atts['parameter'], true ) ) ?: str_replace( "&#038;", "&", sanitize_text_field( $atts['parameter'] ) );
 
 		if ( ! empty( $atts['field'] ) ) {
 			return $this->get_snippet_data( $atts['field'] );
@@ -192,13 +195,26 @@ class Sugarfield_Snippets {
 			$post = get_post();
 			return $post->{$atts['post']};
 
-		} elseif ( ! empty( $atts['widget-area'] ) ) {
-			return dynamic_sidebar( sanitize_key( $atts['widget-area'] ) );
-
-		} elseif ( ! empty( $atts['widget'] ) ) {
+		} elseif ( ! empty( $atts['sidebar'] ) ) { // works with name or slug
 			ob_start();
-			the_widget( sanitize_text_field( $atts['widget'] ), $parameter );
+			dynamic_sidebar( $atts['sidebar'] );
 			return ob_get_clean();
+
+		} elseif ( ! empty( $atts['widget'] ) ) { // must use the widget's class name for now - todo allow title too
+			// first check if this is a default widget
+			$atts['widget'] = ( ( class_exists( "WP_Widget_" . $atts['widget'] ) ) ? "WP_Widget_" : "" ) . $atts['widget'];
+
+			// if the request is not a class, maybe it is the name of a widget
+			if ( ! class_exists( $atts['widget'] ) ) {
+				global $wp_widget_factory;
+				$atts['widget'] = key( wp_list_filter( $wp_widget_factory->widgets, array( 'name' => $atts['widget'] ) ) );
+			}
+
+			if ( class_exists( $atts['widget'] ) ) {
+				ob_start();
+				the_widget( $atts['widget'], $parameter );
+				return ob_get_clean();
+			}
 
 		} elseif ( ! empty( $atts['menu'] ) ) {
 			$menu_args = ( json_decode( $atts['menu'], true ) ) ?: array( 'menu' => sanitize_text_field( $atts['menu'] ) );
