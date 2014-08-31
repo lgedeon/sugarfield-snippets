@@ -13,7 +13,7 @@
  * Calls snippets from shortcodes, menus, widgets, PHP template tag, or action hooks.
  *
  * Works with:
- *   Tigerridge Theme - A rapid prototyping theme. Replaces template files with a single index.html that only fires actions.
+ *   Tigerridge Theme - A rapid prototyping theme. Replaces template files with a single index.html that simply gets the content.
  *   OnyxEye Templates - Calls template files and parts in all the Sugarfield ways - uses ob filter to split header.php into <head> and <body>
  *   Widget Instance by global_1981 - Get widget with data already in it from a sidebar - http://wordpress.org/plugins/widget-instance/
  *
@@ -35,6 +35,9 @@
  *    relationship type: framework, feature, modifier, symbiant
  * todo: write user-side documentation
  * todo: create shortcode builder
+ * todo: make cpt pages say sugarfield
+ * todo: test recursion
+ * todo: are there any translatable strings other than "Snippet"?
  */
 
 class Sugarfield_Snippets {
