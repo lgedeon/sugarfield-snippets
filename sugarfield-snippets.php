@@ -4,7 +4,7 @@
  * Plugin URI:
  * Description: Snippets are similar to posts but can be included inside posts, pages, widget areas, menus, and well... literally anywhere else!
  * Author: Luke Gedeon
- * Version: 0.3-dev
+ * Version: 0.3.1-dev
  * Author URI: http://luke.gedeon.name/
  * Text Domain: sugarfield-snippets
  */
@@ -56,6 +56,8 @@ class Sugarfield_Snippets {
 		'parameters'           => '',
 		// enqueue css or js files
 		'enqueue'             => '',
+		// dependencies for the enqueue
+		'dependencies'        => '',
 		// save snippet content as css or js file
 		'save_as'             => '',
 	);
@@ -372,13 +374,15 @@ class Sugarfield_Snippets {
 				return ob_get_clean();
 			}
 
-		// usage [sugarfield enqueue="style.css"]
+		// usage [sugarfield enqueue="style.css" dependencies="jquery,jquery-ui"]
 		} elseif ( ! empty( $atts['enqueue'] ) ) {
+			$deps = ( isset( $atts['dependencies'] ) && $atts['dependencies'] ) ?
+				array_map( 'sanitize_key', explode( ",", $atts['dependencies'] ) ) : array();
 			$filename = sanitize_file_name( $atts['enqueue'] );
 			if ( '.css' == substr( $filename, -4 ) ) {
-				wp_enqueue_style( sanitize_key( $filename ), $this->get_snippets_dir( 'url' ) . $filename );
+				wp_enqueue_style( sanitize_key( $filename ), $this->get_snippets_dir( 'url' ) . $filename, $deps );
 			} elseif ( '.js' == substr( $filename, -3 ) ) {
-				wp_enqueue_script( sanitize_key( $filename ), $this->get_snippets_dir( 'url' ) . $filename );
+				wp_enqueue_script( sanitize_key( $filename ), $this->get_snippets_dir( 'url' ) . $filename, $deps );
 			}
 
 		// usage [sugarfield save_as="style.css"] -- actually, could turn this into a field in the editor instead
