@@ -7,7 +7,7 @@ deployment:
   production:
     branch: master
     commands:
-      - scp -r sugarfield-snippets/* kdari@kdari.com:/public_html/wp-content/plugins/sugarfield-snippets/
+      - scp -r * kdari@kdari.com:/public_html/wp-content/plugins/sugarfield-snippets/
       
       #from codeship: rsync -avz -e "ssh" ~/clone/ kdari@kdari.com:public_html/wp-content/themes/codegrade
       #from forum: scp -r circle-pushing/* username@my-server:/path-to-put-files-on-server/
